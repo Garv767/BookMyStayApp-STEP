@@ -1,32 +1,27 @@
-import java.util.Map;
-
 /**
- * MAIN CLASS - UseCase3InventorySetup
- * Demonstrates centralized inventory management using HashMap.
- * @version 3.1
+ * MAIN CLASS - HotelBookingApp
+ * The entry point of the Hotel Booking Management System.
  */
 public class HotelBookingApp {
-
     public static void main(String[] args) {
-        System.out.println("Hotel Room Inventory Status\n");
+        System.out.println("Welcome to Book My Stay App\n");
 
         RoomInventory inventory = new RoomInventory();
-        Map<String, Integer> currentStatus = inventory.getRoomAvailability();
-
         Room single = new SingleRoom();
         Room doubleRm = new DoubleRoom();
         Room suite = new SuiteRoom();
 
-        System.out.println("Single Room:");
-        single.displayRoomDetails();
-        System.out.println("Available Rooms: " + currentStatus.get("Single Room") + "\n");
+        RoomSearchService searchService = new RoomSearchService();
 
-        System.out.println("Double Room:");
-        doubleRm.displayRoomDetails();
-        System.out.println("Available Rooms: " + currentStatus.get("Double Room") + "\n");
+        System.out.println("Initial Room Search:");
+        searchService.searchAvailableRooms(inventory, single, doubleRm, suite);
 
-        System.out.println("Suite Room:");
-        suite.displayRoomDetails();
-        System.out.println("Available Rooms: " + currentStatus.get("Suite Room"));
+        System.out.println("System Update: Suite Rooms are now fully booked\n");
+        inventory.updateAvailability("Suite Room", 0);
+
+        System.out.println("Updated Room Search:");
+        searchService.searchAvailableRooms(inventory, single, doubleRm, suite);
+        
+        System.out.println("Application execution complete.");
     }
 }
