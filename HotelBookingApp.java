@@ -1,27 +1,30 @@
 /**
  * MAIN CLASS - HotelBookingApp
- * The entry point of the Hotel Booking Management System.
+ * Demonstrates how booking requests are accepted and queued in FIFO order.
  */
 public class HotelBookingApp {
     public static void main(String[] args) {
-        System.out.println("Welcome to Book My Stay App\n");
+        // Display application header
+        System.out.println("Booking Request Queue");
 
-        RoomInventory inventory = new RoomInventory();
-        Room single = new SingleRoom();
-        Room doubleRm = new DoubleRoom();
-        Room suite = new SuiteRoom();
+        // Initialize the booking queue
+        BookingRequestQueue bookingQueue = new BookingRequestQueue();
 
-        RoomSearchService searchService = new RoomSearchService();
+        // Create booking requests (Simulating guests arriving at different times)
+        Reservation r1 = new Reservation("Abhi", "Single");
+        Reservation r2 = new Reservation("Subha", "Double");
+        Reservation r3 = new Reservation("Vanmathi", "Suite");
 
-        System.out.println("Initial Room Search:");
-        searchService.searchAvailableRooms(inventory, single, doubleRm, suite);
+        // Add requests to the queue (FIFO: First-In-First-Out)
+        bookingQueue.addRequest(r1);
+        bookingQueue.addRequest(r2);
+        bookingQueue.addRequest(r3);
 
-        System.out.println("System Update: Suite Rooms are now fully booked\n");
-        inventory.updateAvailability("Suite Room", 0);
-
-        System.out.println("Updated Room Search:");
-        searchService.searchAvailableRooms(inventory, single, doubleRm, suite);
-        
-        System.out.println("Application execution complete.");
+        // Process and display queued booking requests in arrival order
+        while (bookingQueue.hasPendingRequests()) {
+            Reservation current = bookingQueue.getNextRequest();
+            System.out.println("Processing booking for Guest: " + current.getGuestName() + 
+                               ", Room Type: " + current.getRoomType());
+        }
     }
 }
