@@ -4,10 +4,8 @@ import java.util.Map;
 /**
  * CLASS - RoomInventory
  * Acts as the single source of truth for room availability.
- * @version 3.1
  */
 public class RoomInventory {
-
     private Map<String, Integer> roomAvailability;
 
     public RoomInventory() {
