@@ -1,6 +1,6 @@
 /**
  * MAIN CLASS - HotelBookingApp
- * Demonstrates UC6-UC8, plus UC9 (Error Handling & Validation).
+ * Demonstrates UC6-UC10.
  */
 public class HotelBookingApp {
     public static void main(String[] args) {
@@ -9,45 +9,58 @@ public class HotelBookingApp {
         RoomInventory inventory = new RoomInventory();
         BookingRequestQueue bookingQueue = new BookingRequestQueue();
         BookingHistory bookingHistory = new BookingHistory(); 
+        
         BookingAllocationService allocationService = new BookingAllocationService(bookingHistory);
+        BookingCancellationService cancellationService = new BookingCancellationService(bookingHistory, inventory);
 
-        System.out.println("\nUC9: Capturing Booking Requests with Validation");
-
-        // Valid and Invalid requests wrapped in a helper method or try-catch block
-        attemptBooking(bookingQueue, "Abhi", "Single Room");
-        attemptBooking(bookingQueue, "Subha", "Double Room");
-        
-        // Simulating Invalid Inputs (UC9 Error Handling)
-        attemptBooking(bookingQueue, "", "Suite Room");          // Fails: Empty Name
-        attemptBooking(bookingQueue, "Karthik", null);           // Fails: Null Room Type
-        
-        attemptBooking(bookingQueue, "Vanmathi", "Suite Room");
-        attemptBooking(bookingQueue, "Priya", "Suite Room"); 
-
-        // Process all valid bookings
+        System.out.println("\n=== Processing Initial Bookings ===");
+        attemptBooking(bookingQueue, "Abhi", "Suite Room");
+        attemptBooking(bookingQueue, "Subha", "Suite Room");
+        attemptBooking(bookingQueue, "Karthik", "Suite Room"); // Fails, only 2 suites
         allocationService.processBookings(bookingQueue, inventory);
 
-        // --- UC7 Demonstration: Add-On Services ---
-        System.out.println("\nUC7: Guest Customizing a Room with Add-ons");
-        Room myRoom = new DoubleRoom();
-        myRoom = new WiFiAddOn(myRoom);
-        myRoom = new BreakfastAddOn(myRoom);
-        myRoom.displayRoomDetails();
+        // Capture a valid ID to test cancellation (Abhi should be 1001)
+        int idToCancel = 1001; 
 
-        // --- UC8 Demonstration: Booking History & Reporting ---
+        // --- UC10 Demonstration: Cancellation & Rollback ---
+        System.out.println("\nUC10: Booking Cancellation & Inventory Rollback");
+        
+        // Before Cancellation
+        System.out.println("Inventory before cancellation: " + inventory.getRoomAvailability().get("Suite Room") + " Suite Rooms available.");
+
+        // Attempt valid cancellation
+        try {
+            cancellationService.cancelBooking(idToCancel);
+        } catch (BookingCancellationException e) {
+            System.err.println(e.getMessage());
+        }
+
+        // After Cancellation
+        System.out.println("Inventory after cancellation: " + inventory.getRoomAvailability().get("Suite Room") + " Suite Rooms available.");
+
+        // Attempt invalid cancellation (already cancelled or doesn't exist)
+        try {
+            cancellationService.cancelBooking(idToCancel); // Already cancelled
+        } catch (BookingCancellationException e) {
+            System.err.println(e.getMessage());
+        }
+
+        try {
+            cancellationService.cancelBooking(9999); // Doesn't exist
+        } catch (BookingCancellationException e) {
+            System.err.println(e.getMessage());
+        }
+
+        // --- UC8 Demonstration: Final Booking History ---
         bookingHistory.displayReport();
     }
 
-    /**
-     * Helper method to demonstrate try-catch exception handling for UC9.
-     */
     private static void attemptBooking(BookingRequestQueue queue, String guestName, String roomType) {
         try {
             Reservation reservation = new Reservation(guestName, roomType);
             queue.addRequest(reservation);
             System.out.println("Queued successfully: " + guestName + " for a " + roomType);
         } catch (InvalidReservationException e) {
-            // Gracefully catch the error without crashing the application
             System.err.println("ERROR adding to queue: " + e.getMessage());
         }
     }

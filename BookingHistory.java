@@ -12,16 +12,22 @@ public class BookingHistory {
         this.bookingRecords = new ArrayList<>();
     }
 
-    /**
-     * Adds a processed reservation to the history.
-     */
     public void addRecord(Reservation reservation) {
         bookingRecords.add(reservation);
     }
 
     /**
-     * Generates and displays a summary report of all bookings.
+     * UC10: Retrieves a reservation by its ID.
      */
+    public Reservation getReservationById(int reservationId) {
+        for (Reservation res : bookingRecords) {
+            if (res.getReservationId() == reservationId) {
+                return res;
+            }
+        }
+        return null; // Not found
+    }
+
     public void displayReport() {
         System.out.println("\nBooking History & Summary Report");
         
@@ -32,8 +38,8 @@ public class BookingHistory {
 
         int confirmedCount = 0;
         int failedCount = 0;
+        int cancelledCount = 0;
 
-        // Display individual records
         for (Reservation res : bookingRecords) {
             System.out.println("Res ID: " + res.getReservationId() + 
                                " | Guest: " + res.getGuestName() + 
@@ -44,12 +50,14 @@ public class BookingHistory {
                 confirmedCount++;
             } else if ("FAILED".equals(res.getStatus())) {
                 failedCount++;
+            } else if ("CANCELLED".equals(res.getStatus())) {
+                cancelledCount++;
             }
         }
 
-        // Display summary statistics
         System.out.println("Total Booking Requests : " + bookingRecords.size());
-        System.out.println("Confirmed Bookings     : " + confirmedCount);
+        System.out.println("Active Confirmed       : " + confirmedCount);
+        System.out.println("Cancelled Bookings     : " + cancelledCount);
         System.out.println("Failed/Declined        : " + failedCount);
     }
 }

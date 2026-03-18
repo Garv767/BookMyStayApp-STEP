@@ -28,16 +28,23 @@ public class RoomInventory {
     }
 
     /**
-     * UC6: Checks availability and books the room if available.
-     * @return true if successfully booked, false if unavailable.
+     * Checks availability and books the room if available.
      */
     public boolean checkAndBookRoom(String roomType) {
         int availableCount = roomAvailability.getOrDefault(roomType, 0);
         if (availableCount > 0) {
-            // Allocate the room by decrementing the count
             roomAvailability.put(roomType, availableCount - 1);
             return true;
         }
         return false;
+    }
+
+    /**
+     * UC10: Rolls back inventory by incrementing the available count for a room type.
+     */
+    public void releaseRoom(String roomType) {
+        int currentCount = roomAvailability.getOrDefault(roomType, 0);
+        roomAvailability.put(roomType, currentCount + 1);
+        System.out.println("Inventory Rollback: 1 " + roomType + " added back to inventory.");
     }
 }
