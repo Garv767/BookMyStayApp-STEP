@@ -1,11 +1,15 @@
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * CLASS - BookingHistory
- * Maintains a record of all processed reservations and provides reporting capabilities.
+ * Maintains a record of all processed reservations and provides reporting.
+ * Updated for UC12: Implements Serializable.
  */
-public class BookingHistory {
+public class BookingHistory implements Serializable {
+    private static final long serialVersionUID = 1L;
+    
     private List<Reservation> bookingRecords;
 
     public BookingHistory() {
@@ -16,16 +20,20 @@ public class BookingHistory {
         bookingRecords.add(reservation);
     }
 
-    /**
-     * UC10: Retrieves a reservation by its ID.
-     */
     public Reservation getReservationById(int reservationId) {
         for (Reservation res : bookingRecords) {
             if (res.getReservationId() == reservationId) {
                 return res;
             }
         }
-        return null; // Not found
+        return null;
+    }
+
+    /**
+     * Gets the full list of records (Used during system recovery).
+     */
+    public List<Reservation> getBookingRecords() {
+        return bookingRecords;
     }
 
     public void displayReport() {

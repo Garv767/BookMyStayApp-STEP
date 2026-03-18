@@ -1,54 +1,47 @@
-import java.util.HashMap;
-import java.util.Map;
+import java.io.Serializable;
 
 /**
- * CLASS - RoomInventory
- * Acts as the single source of truth for room availability.
- * Updated for UC11 to be Thread-Safe.
+ * CLASS - Reservation
+ * Represents a booking request made by a guest.
+ * Updated for UC12: Implements Serializable for data persistence.
  */
-public class RoomInventory {
-    private Map<String, Integer> roomAvailability;
+public class Reservation implements Serializable {
+    private static final long serialVersionUID = 1L; // Ensures version compatibility during deserialization
+    
+    private static int idCounter = 1000; 
+    
+    private int reservationId;
+    private String guestName;
+    private String roomType;
+    private String status;
 
-    public RoomInventory() {
-        this.roomAvailability = new HashMap<>();
-        initializeInventory();
-    }
-
-    private void initializeInventory() {
-        roomAvailability.put("Single Room", 5);
-        roomAvailability.put("Double Room", 3);
-        roomAvailability.put("Suite Room", 2); // Only 2 suites available
-    }
-
-    public Map<String, Integer> getRoomAvailability() {
-        return roomAvailability;
-    }
-
-    public synchronized void updateAvailability(String roomType, int count) {
-        roomAvailability.put(roomType, count);
-    }
-
-    /**
-     * Synchronized to prevent Race Conditions during concurrent bookings.
-     */
-    public synchronized boolean checkAndBookRoom(String roomType) {
-        int availableCount = roomAvailability.getOrDefault(roomType, 0);
-        if (availableCount > 0) {
-            // Simulate a slight delay that would normally cause a race condition if not synchronized
-            try { Thread.sleep(50); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
-            
-            roomAvailability.put(roomType, availableCount - 1);
-            return true;
+    public Reservation(String guestName, String roomType) throws InvalidReservationException {
+        if (guestName == null || guestName.trim().isEmpty()) {
+            throw new InvalidReservationException("Validation Failed: Guest name cannot be null or empty.");
         }
-        return false;
+        if (roomType == null || roomType.trim().isEmpty()) {
+            throw new InvalidReservationException("Validation Failed: Room type cannot be null or empty.");
+        }
+
+        this.reservationId = ++idCounter;
+        this.guestName = guestName.trim();
+        this.roomType = roomType.trim();
+        this.status = "PENDING";
     }
 
+    public int getReservationId() { return reservationId; }
+    public String getGuestName() { return guestName; }
+    public String getRoomType() { return roomType; }
+    
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+
     /**
-     * Synchronized to prevent issues when multiple cancellations happen simultaneously.
+     * Helper method to prevent ID collisions when loading past reservations.
      */
-    public synchronized void releaseRoom(String roomType) {
-        int currentCount = roomAvailability.getOrDefault(roomType, 0);
-        roomAvailability.put(roomType, currentCount + 1);
-        System.out.println("Inventory Rollback: 1 " + roomType + " added back to inventory.");
+    public static void updateIdCounter(int loadedId) {
+        if (loadedId >= idCounter) {
+            idCounter = loadedId;
+        }
     }
 }

@@ -1,47 +1,49 @@
 /**
  * MAIN CLASS - HotelBookingApp
- * Demonstrates UC11: Concurrent Booking Simulation alongside previous use cases.
+ * Demonstrates UC12: Data Persistence alongside previous functionality.
  */
 public class HotelBookingApp {
     public static void main(String[] args) {
         System.out.println("Hotel Booking System - Initialization");
 
+        DataPersistenceService persistenceService = new DataPersistenceService();
         RoomInventory inventory = new RoomInventory();
         BookingRequestQueue bookingQueue = new BookingRequestQueue();
-        BookingHistory bookingHistory = new BookingHistory(); 
         
-        BookingAllocationService allocationService = new BookingAllocationService(bookingHistory);
-
-        // --- UC11 Demonstration: Concurrent Booking Simulation ---
-        System.out.println("\nUC11: Simulating Concurrent Bookings");
-        System.out.println("Scenario: 4 Agents trying to book 2 available Suite Rooms simultaneously.");
-
-        // Create threads (agents) trying to book the exact same resource type
-        Thread agent1 = new Thread(new BookingAgent("Agent_Alice", "Suite Room", bookingQueue, allocationService, inventory), "Thread-1");
-        Thread agent2 = new Thread(new BookingAgent("Agent_Bob", "Suite Room", bookingQueue, allocationService, inventory), "Thread-2");
-        Thread agent3 = new Thread(new BookingAgent("Agent_Charlie", "Suite Room", bookingQueue, allocationService, inventory), "Thread-3");
-        Thread agent4 = new Thread(new BookingAgent("Agent_Diana", "Suite Room", bookingQueue, allocationService, inventory), "Thread-4");
-
-        // Start threads concurrently
-        agent1.start();
-        agent2.start();
-        agent3.start();
-        agent4.start();
-
-        // Wait for all threads to finish before continuing
-        try {
-            agent1.join();
-            agent2.join();
-            agent3.join();
-            agent4.join();
-        } catch (InterruptedException e) {
-            System.err.println("Thread execution interrupted.");
+        // --- UC12: System Recovery ---
+        BookingHistory bookingHistory = persistenceService.loadData();
+        
+        // Rebuild inventory state and ID counters based on loaded history
+        for (Reservation res : bookingHistory.getBookingRecords()) {
+            if ("CONFIRMED".equals(res.getStatus())) {
+                inventory.checkAndBookRoom(res.getRoomType()); // Deduct confirmed rooms from fresh inventory
+            }
+            Reservation.updateIdCounter(res.getReservationId()); // Sync ID counter
         }
 
-        System.out.println("\nFinal Inventory State");
-        System.out.println("Suite Rooms remaining: " + inventory.getRoomAvailability().get("Suite Room"));
+        BookingAllocationService allocationService = new BookingAllocationService(bookingHistory);
+        BookingCancellationService cancellationService = new BookingCancellationService(bookingHistory, inventory);
 
-        // --- UC8 Demonstration: Final Booking History ---
+        // Run a sample booking to show the system works across restarts
+        System.out.println("\nProcessing New Booking Requests");
+        attemptBooking(bookingQueue, "NewGuest_Alice", "Double Room");
+        allocationService.processBookings(bookingQueue, inventory);
+
+        // Display the report (will show both old loaded data + new data)
         bookingHistory.displayReport();
+
+        // --- UC12: Data Persistence (Save before exiting) ---
+        persistenceService.saveData(bookingHistory);
+        System.out.println("=== System Shutdown ===");
+    }
+
+    private static void attemptBooking(BookingRequestQueue queue, String guestName, String roomType) {
+        try {
+            Reservation reservation = new Reservation(guestName, roomType);
+            queue.addRequest(reservation);
+            System.out.println("Queued successfully: " + guestName + " for a " + roomType);
+        } catch (InvalidReservationException e) {
+            System.err.println("ERROR adding to queue: " + e.getMessage());
+        }
     }
 }
