@@ -1,6 +1,6 @@
 /**
  * MAIN CLASS - HotelBookingApp
- * Demonstrates UC6-UC10.
+ * Demonstrates UC11: Concurrent Booking Simulation alongside previous use cases.
  */
 public class HotelBookingApp {
     public static void main(String[] args) {
@@ -11,57 +11,37 @@ public class HotelBookingApp {
         BookingHistory bookingHistory = new BookingHistory(); 
         
         BookingAllocationService allocationService = new BookingAllocationService(bookingHistory);
-        BookingCancellationService cancellationService = new BookingCancellationService(bookingHistory, inventory);
 
-        System.out.println("\n=== Processing Initial Bookings ===");
-        attemptBooking(bookingQueue, "Abhi", "Suite Room");
-        attemptBooking(bookingQueue, "Subha", "Suite Room");
-        attemptBooking(bookingQueue, "Karthik", "Suite Room"); // Fails, only 2 suites
-        allocationService.processBookings(bookingQueue, inventory);
+        // --- UC11 Demonstration: Concurrent Booking Simulation ---
+        System.out.println("\nUC11: Simulating Concurrent Bookings");
+        System.out.println("Scenario: 4 Agents trying to book 2 available Suite Rooms simultaneously.");
 
-        // Capture a valid ID to test cancellation (Abhi should be 1001)
-        int idToCancel = 1001; 
+        // Create threads (agents) trying to book the exact same resource type
+        Thread agent1 = new Thread(new BookingAgent("Agent_Alice", "Suite Room", bookingQueue, allocationService, inventory), "Thread-1");
+        Thread agent2 = new Thread(new BookingAgent("Agent_Bob", "Suite Room", bookingQueue, allocationService, inventory), "Thread-2");
+        Thread agent3 = new Thread(new BookingAgent("Agent_Charlie", "Suite Room", bookingQueue, allocationService, inventory), "Thread-3");
+        Thread agent4 = new Thread(new BookingAgent("Agent_Diana", "Suite Room", bookingQueue, allocationService, inventory), "Thread-4");
 
-        // --- UC10 Demonstration: Cancellation & Rollback ---
-        System.out.println("\nUC10: Booking Cancellation & Inventory Rollback");
-        
-        // Before Cancellation
-        System.out.println("Inventory before cancellation: " + inventory.getRoomAvailability().get("Suite Room") + " Suite Rooms available.");
+        // Start threads concurrently
+        agent1.start();
+        agent2.start();
+        agent3.start();
+        agent4.start();
 
-        // Attempt valid cancellation
+        // Wait for all threads to finish before continuing
         try {
-            cancellationService.cancelBooking(idToCancel);
-        } catch (BookingCancellationException e) {
-            System.err.println(e.getMessage());
+            agent1.join();
+            agent2.join();
+            agent3.join();
+            agent4.join();
+        } catch (InterruptedException e) {
+            System.err.println("Thread execution interrupted.");
         }
 
-        // After Cancellation
-        System.out.println("Inventory after cancellation: " + inventory.getRoomAvailability().get("Suite Room") + " Suite Rooms available.");
-
-        // Attempt invalid cancellation (already cancelled or doesn't exist)
-        try {
-            cancellationService.cancelBooking(idToCancel); // Already cancelled
-        } catch (BookingCancellationException e) {
-            System.err.println(e.getMessage());
-        }
-
-        try {
-            cancellationService.cancelBooking(9999); // Doesn't exist
-        } catch (BookingCancellationException e) {
-            System.err.println(e.getMessage());
-        }
+        System.out.println("\nFinal Inventory State");
+        System.out.println("Suite Rooms remaining: " + inventory.getRoomAvailability().get("Suite Room"));
 
         // --- UC8 Demonstration: Final Booking History ---
         bookingHistory.displayReport();
-    }
-
-    private static void attemptBooking(BookingRequestQueue queue, String guestName, String roomType) {
-        try {
-            Reservation reservation = new Reservation(guestName, roomType);
-            queue.addRequest(reservation);
-            System.out.println("Queued successfully: " + guestName + " for a " + roomType);
-        } catch (InvalidReservationException e) {
-            System.err.println("ERROR adding to queue: " + e.getMessage());
-        }
     }
 }

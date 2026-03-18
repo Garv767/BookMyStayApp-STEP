@@ -4,6 +4,7 @@ import java.util.Map;
 /**
  * CLASS - RoomInventory
  * Acts as the single source of truth for room availability.
+ * Updated for UC11 to be Thread-Safe.
  */
 public class RoomInventory {
     private Map<String, Integer> roomAvailability;
@@ -16,23 +17,26 @@ public class RoomInventory {
     private void initializeInventory() {
         roomAvailability.put("Single Room", 5);
         roomAvailability.put("Double Room", 3);
-        roomAvailability.put("Suite Room", 2);
+        roomAvailability.put("Suite Room", 2); // Only 2 suites available
     }
 
     public Map<String, Integer> getRoomAvailability() {
         return roomAvailability;
     }
 
-    public void updateAvailability(String roomType, int count) {
+    public synchronized void updateAvailability(String roomType, int count) {
         roomAvailability.put(roomType, count);
     }
 
     /**
-     * Checks availability and books the room if available.
+     * Synchronized to prevent Race Conditions during concurrent bookings.
      */
-    public boolean checkAndBookRoom(String roomType) {
+    public synchronized boolean checkAndBookRoom(String roomType) {
         int availableCount = roomAvailability.getOrDefault(roomType, 0);
         if (availableCount > 0) {
+            // Simulate a slight delay that would normally cause a race condition if not synchronized
+            try { Thread.sleep(50); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
+            
             roomAvailability.put(roomType, availableCount - 1);
             return true;
         }
@@ -40,9 +44,9 @@ public class RoomInventory {
     }
 
     /**
-     * UC10: Rolls back inventory by incrementing the available count for a room type.
+     * Synchronized to prevent issues when multiple cancellations happen simultaneously.
      */
-    public void releaseRoom(String roomType) {
+    public synchronized void releaseRoom(String roomType) {
         int currentCount = roomAvailability.getOrDefault(roomType, 0);
         roomAvailability.put(roomType, currentCount + 1);
         System.out.println("Inventory Rollback: 1 " + roomType + " added back to inventory.");

@@ -3,7 +3,8 @@ import java.util.Queue;
 
 /**
  * CLASS - BookingRequestQueue
- * Manages booking requests using a FIFO Queue to ensure fairness.
+ * Manages booking requests using a FIFO Queue.
+ * Updated for UC11 to be Thread-Safe.
  */
 public class BookingRequestQueue {
     private Queue<Reservation> requestQueue;
@@ -12,15 +13,15 @@ public class BookingRequestQueue {
         this.requestQueue = new LinkedList<>();
     }
 
-    public void addRequest(Reservation reservation) {
+    public synchronized void addRequest(Reservation reservation) {
         requestQueue.offer(reservation);
     }
 
-    public Reservation getNextRequest() {
+    public synchronized Reservation getNextRequest() {
         return requestQueue.poll();
     }
 
-    public boolean hasPendingRequests() {
+    public synchronized boolean hasPendingRequests() {
         return !requestQueue.isEmpty();
     }
 }
