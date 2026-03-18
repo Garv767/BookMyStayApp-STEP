@@ -1,27 +1,30 @@
 /**
  * MAIN CLASS - HotelBookingApp
- * Demonstrates UC6 (Allocation), UC7 (Add-ons), and UC8 (Reporting).
+ * Demonstrates UC6-UC8, plus UC9 (Error Handling & Validation).
  */
 public class HotelBookingApp {
     public static void main(String[] args) {
         System.out.println("Hotel Booking System - Initialization");
 
-        // 1. Initialize core components
         RoomInventory inventory = new RoomInventory();
         BookingRequestQueue bookingQueue = new BookingRequestQueue();
         BookingHistory bookingHistory = new BookingHistory(); 
-
-        // 2. Setup the allocation service with the history tracker
         BookingAllocationService allocationService = new BookingAllocationService(bookingHistory);
 
-        // 3. Create sample booking requests
-        bookingQueue.addRequest(new Reservation("Abhi", "Single Room"));
-        bookingQueue.addRequest(new Reservation("Subha", "Double Room"));
-        bookingQueue.addRequest(new Reservation("Vanmathi", "Suite Room"));
-        bookingQueue.addRequest(new Reservation("Karthik", "Suite Room"));
-        bookingQueue.addRequest(new Reservation("Priya", "Suite Room")); // Should fail (only 2 suites exist)
+        System.out.println("\nUC9: Capturing Booking Requests with Validation");
 
-        // 4. Process all bookings
+        // Valid and Invalid requests wrapped in a helper method or try-catch block
+        attemptBooking(bookingQueue, "Abhi", "Single Room");
+        attemptBooking(bookingQueue, "Subha", "Double Room");
+        
+        // Simulating Invalid Inputs (UC9 Error Handling)
+        attemptBooking(bookingQueue, "", "Suite Room");          // Fails: Empty Name
+        attemptBooking(bookingQueue, "Karthik", null);           // Fails: Null Room Type
+        
+        attemptBooking(bookingQueue, "Vanmathi", "Suite Room");
+        attemptBooking(bookingQueue, "Priya", "Suite Room"); 
+
+        // Process all valid bookings
         allocationService.processBookings(bookingQueue, inventory);
 
         // --- UC7 Demonstration: Add-On Services ---
@@ -32,7 +35,20 @@ public class HotelBookingApp {
         myRoom.displayRoomDetails();
 
         // --- UC8 Demonstration: Booking History & Reporting ---
-        // 5. Display the final booking report
         bookingHistory.displayReport();
+    }
+
+    /**
+     * Helper method to demonstrate try-catch exception handling for UC9.
+     */
+    private static void attemptBooking(BookingRequestQueue queue, String guestName, String roomType) {
+        try {
+            Reservation reservation = new Reservation(guestName, roomType);
+            queue.addRequest(reservation);
+            System.out.println("Queued successfully: " + guestName + " for a " + roomType);
+        } catch (InvalidReservationException e) {
+            // Gracefully catch the error without crashing the application
+            System.err.println("ERROR adding to queue: " + e.getMessage());
+        }
     }
 }
