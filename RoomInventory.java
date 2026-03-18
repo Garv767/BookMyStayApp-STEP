@@ -26,4 +26,18 @@ public class RoomInventory {
     public void updateAvailability(String roomType, int count) {
         roomAvailability.put(roomType, count);
     }
+
+    /**
+     * UC6: Checks availability and books the room if available.
+     * @return true if successfully booked, false if unavailable.
+     */
+    public boolean checkAndBookRoom(String roomType) {
+        int availableCount = roomAvailability.getOrDefault(roomType, 0);
+        if (availableCount > 0) {
+            // Allocate the room by decrementing the count
+            roomAvailability.put(roomType, availableCount - 1);
+            return true;
+        }
+        return false;
+    }
 }

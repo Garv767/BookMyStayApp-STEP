@@ -1,30 +1,35 @@
+import java.util.Map;
+
 /**
  * MAIN CLASS - HotelBookingApp
- * Demonstrates how booking requests are accepted and queued in FIFO order.
+ * Demonstrates UC6: Reservation Confirmation & Room Allocation
  */
 public class HotelBookingApp {
     public static void main(String[] args) {
-        // Display application header
-        System.out.println("Booking Request Queue");
+        System.out.println("Hotel Booking System - UC6 Initialization");
 
-        // Initialize the booking queue
+        // 1. Initialize Inventory and Queue
+        RoomInventory inventory = new RoomInventory();
         BookingRequestQueue bookingQueue = new BookingRequestQueue();
 
-        // Create booking requests (Simulating guests arriving at different times)
-        Reservation r1 = new Reservation("Abhi", "Single");
-        Reservation r2 = new Reservation("Subha", "Double");
-        Reservation r3 = new Reservation("Vanmathi", "Suite");
+        // 2. Create booking requests (Simulating guests arriving)
+        // Note: Inventory initially has 5 Single, 3 Double, and 2 Suite Rooms.
+        bookingQueue.addRequest(new Reservation("Abhi", "Single Room"));
+        bookingQueue.addRequest(new Reservation("Subha", "Double Room"));
+        bookingQueue.addRequest(new Reservation("Vanmathi", "Suite Room"));
+        bookingQueue.addRequest(new Reservation("Karthik", "Suite Room"));
+        bookingQueue.addRequest(new Reservation("Priya", "Suite Room")); // This 3rd Suite request should fail
 
-        // Add requests to the queue (FIFO: First-In-First-Out)
-        bookingQueue.addRequest(r1);
-        bookingQueue.addRequest(r2);
-        bookingQueue.addRequest(r3);
+        // 3. Initialize the Allocation Service
+        BookingAllocationService allocationService = new BookingAllocationService();
 
-        // Process and display queued booking requests in arrival order
-        while (bookingQueue.hasPendingRequests()) {
-            Reservation current = bookingQueue.getNextRequest();
-            System.out.println("Processing booking for Guest: " + current.getGuestName() + 
-                               ", Room Type: " + current.getRoomType());
+        // 4. Delegate the processing to the service
+        allocationService.processBookings(bookingQueue, inventory);
+
+        // 5. Display Final Inventory state
+        System.out.println("\nFinal Room Inventory State");
+        for (Map.Entry<String, Integer> entry : inventory.getRoomAvailability().entrySet()) {
+            System.out.println(entry.getKey() + ": " + entry.getValue() + " available");
         }
     }
 }
