@@ -77,6 +77,6 @@ The repository contains the following active Java files:
     java HotelBookingApp
     ```
 
-Note: Upon running for the first time, it will create a `hotel_bookings.ser` file in the same directory to store data. Subsequent runs will read from this file.
+> **Note:** Upon running for the first time, it will create a `hotel_bookings.ser` file in the same directory to store data. Subsequent runs will read from this file.
     
    
